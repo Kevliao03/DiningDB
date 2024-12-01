@@ -1,0 +1,52 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "DiningDB API",
+        "version": "1.0.0",
+        "description": "API documentation for DiningDB"
+    },
+    "host": "localhost:5000",
+    "basePath": "/",
+    "schemes": ["http"],
+    "paths": {
+        "/api/users/create": {
+            "post": {
+                "summary": "Create a new user",
+                "parameters": [
+                    {
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "name": { "type": "string" },
+                                "preferences": { "type": "string" }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": { "description": "User created successfully" }
+                }
+            }
+        },
+        "/api/users/{user_id}": {
+            "get": {
+                "summary": "Get a user by ID",
+                "parameters": [
+                    {
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": { "description": "User details returned" },
+                    "404": { "description": "User not found" }
+                }
+            }
+        }
+    }
+}
