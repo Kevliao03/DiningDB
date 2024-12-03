@@ -1,7 +1,21 @@
-from database.db_setup import Session, User, Restaurant, Interaction
+from db_setup import Session, User, Restaurant, Interaction
 
 def populate_data():
     session = Session()
+
+    # Add sample user
+    user = session.query(User).filter_by(id=1).first()
+    if not user:
+        user = User(
+            id=1,
+            name="Sample User",
+            preferences="Italian, Vegan, Chinese, Mexican, Bakery"  # Example preferences
+        )
+        session.add(user)
+        session.commit()
+        print(f"User with ID {user.id} added to the database.")
+    else:
+        print(f"User with ID {user.id} already exists in the database.")
 
     # Add sample users
     users = [
@@ -11,8 +25,8 @@ def populate_data():
 
     # Add sample restaurants
     restaurants = [
-        Restaurant(name="Veggie Delight", cuisine="Vegan", location="NYC"),
-        Restaurant(name="Taco Paradise", cuisine="Mexican", location="LA"),
+        Restaurant(name="Veggie Delight", cuisine="Vegan", location="New York City, NY"),
+        Restaurant(name="Taco Paradise", cuisine="Mexican", location="Los Angeles, CA"),
     ]
 
     # Add sample interactions

@@ -27,7 +27,17 @@ def get_restaurant_by_id(restaurant_id):
 
 # Add a new interaction (user rating a restaurant)
 def add_interaction(user_id, restaurant_id, rating):
-    new_interaction = Interaction(user_id=user_id, restaurant_id=restaurant_id, rating=rating)
-    session.add(new_interaction)
+    session = Session()
+    interaction = session.query(Interaction).filter_by(user_id=user_id, restaurant_id=restaurant_id).first()
+    
+    if interaction:
+        interaction.rating = rating  # Update existing rating
+        message = f"Updated rating for restaurant {restaurant_id} by user {user_id}"
+    else:
+        interaction = Interaction(user_id=user_id, restaurant_id=restaurant_id, rating=rating)
+        session.add(interaction)
+        message = f"Added rating for restaurant {restaurant_id} by user {user_id}"
+    
     session.commit()
-    return new_interaction
+    session.close()
+    print(message)

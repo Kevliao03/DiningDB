@@ -1,51 +1,117 @@
-import pandas as pd
 from surprise import Dataset, Reader, SVD
-from surprise.model_selection import train_test_split
-from database.db_setup import Session, Interaction, Restaurant
+from database.db_setup import Session, Interaction, User, Restaurant
+import pandas as pd
+import pickle
+import requests
+import os
+import re
+
+def fetch_restaurants_from_google(city, state, store_in_db=True):
+    """
+    Fetch restaurants from Google Places API and optionally store them in the database.
+    """
+    # Step 1: Fetch data from Google API
+    location_query = f"{city}, {state}" if state else city
+    endpoint = "https://maps.googleapis.com/maps/api/place/textsearch/json"
+    params = {
+        "query": f"restaurants in {location_query}",
+        "key": "", # FILL IN
+    }
+    response = requests.get(endpoint, params=params)
+    if response.status_code != 200:
+        raise RuntimeError(f"Failed to fetch restaurants: {response.json().get('error_message', 'Unknown error')}")
+    data = response.json()
+    results = data.get("results", [])
+
+    # Step 2: Format restaurant data
+    restaurants = []
+    for result in results:
+        restaurants.append({
+            "id": result["place_id"],
+            "name": result["name"],
+            "location": result.get("formatted_address"),
+            "types": result.get("types", []),
+            "rating": result.get("rating", 0),
+            "price_level": result.get("price_level", "Unknown"),
+        })
+
+    # Step 3: Optionally store in the database
+    if store_in_db:
+        store_restaurants_in_db(city, state, restaurants)
+
+    return restaurants
 
 
-def generate_recommendations(user_id):
+def store_restaurants_in_db(city, state, restaurants):
     session = Session()
-
-    # Fetch all interactions from the database
-    interactions = session.query(Interaction).all()
-    data = [{"user_id": i.user_id, "restaurant_id": i.restaurant_id, "rating": i.rating} for i in interactions]
+    for r in restaurants:
+        # Extract city and state from formatted_address
+        location = city + ", " + state
+        
+        # Check if the restaurant already exists in the database
+        existing = session.query(Restaurant).filter_by(id=r["id"]).first()
+        if not existing:
+            print(f"Adding restaurant: {r['name']}")  # Debugging log
+            new_restaurant = Restaurant(
+                id=r["id"],
+                name=r["name"],
+                cuisine=", ".join(r.get("types", ["Restaurant"])),  # Join types as a string
+                location=location  # Use parsed city, state
+            )
+            session.add(new_restaurant)
+    session.commit()
     session.close()
 
-    # Prepare data for the collaborative filtering model
-    reader = Reader(rating_scale=(1, 5))
-    dataset = Dataset.load_from_df(
-        pd.DataFrame(data)[["user_id", "restaurant_id", "rating"]], reader
-    )
 
-    # Train-test split
-    trainset, testset = train_test_split(dataset, test_size=0.25)
-
-    # Train SVD model
-    model = SVD()
-    model.fit(trainset)
-
-    # Generate recommendations for the given user
-    restaurant_ids = [i["restaurant_id"] for i in data]
-    unique_restaurant_ids = list(set(restaurant_ids))
-    predictions = []
-    for rest_id in unique_restaurant_ids:
-        pred = model.predict(user_id, rest_id)
-        predictions.append({"restaurant_id": rest_id, "rating": pred.est})
-
-    # Sort recommendations by predicted rating
-    recommendations = sorted(predictions, key=lambda x: x["rating"], reverse=True)
-
-    # Fetch restaurant details
+def generate_recommendations(user_id, city, state):
+    """
+    Generate recommendations for a user by fetching restaurant data from Google,
+    storing it, and using ML predictions.
+    """
     session = Session()
-    detailed_recommendations = [
-        {
-            "restaurant_id": rec["restaurant_id"],
-            "name": session.query(Restaurant).filter(Restaurant.id == rec["restaurant_id"]).first().name,
-            "cuisine": session.query(Restaurant).filter(Restaurant.id == rec["restaurant_id"]).first().cuisine,
-        }
-        for rec in recommendations
-    ]
+
+    # Step 1: Fetch user preferences
+    user = session.query(User).filter_by(id=user_id).first()
+    if not user:
+        session.close()
+        raise ValueError(f"User with id {user_id} does not exist.")
+    preferences = [pref.strip().lower() for pref in user.preferences.split(",") if pref]
+
+    # Step 2: Fetch restaurants from Google API and store in the database
+    restaurants = fetch_restaurants_from_google(city, state, store_in_db=False)
+
+    # Optionally store in the database (if needed for later queries)
+    store_restaurants_in_db(city, state, restaurants)
+
+    if not restaurants:
+        session.close()
+        return []
+
+    # Step 3: Load the trained ML model
+    try:
+        with open("trained_model.pkl", "rb") as f:
+            algo = pickle.load(f)
+    except FileNotFoundError:
+        session.close()
+        raise RuntimeError("Trained model file not found. Please train the model first.")
+
+    # Step 4: Predict user ratings for restaurants
+    recommendations = []
+    for restaurant in restaurants:
+        prediction = algo.predict(user_id, restaurant["id"]).est
+        recommendations.append({
+            "id": restaurant["id"],
+            "name": restaurant["name"],
+            "location": restaurant["location"],
+            "types": restaurant.get("types", []),
+            "rating": restaurant["rating"],
+            "price_level": restaurant.get("price_level", "Unknown"),
+            "predicted_rating": round(prediction, 2),
+            "matches_preference": any(pref in " ".join(restaurant["types"]).lower() for pref in preferences),
+        })
+
     session.close()
 
-    return detailed_recommendations
+    # Step 5: Sort recommendations
+    recommendations.sort(key=lambda x: (-x["matches_preference"], -x["predicted_rating"]))
+    return recommendations
