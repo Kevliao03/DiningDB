@@ -121,7 +121,17 @@ const Recommendations = () => {
                 {recommendations.map((rec) => (
                     <li key={rec.id} style={{ marginBottom: "20px" }}>
                         <strong>{rec.name}</strong> - {rec.location} <br />
-                        <em>Types: {rec.types.join(", ")}</em> {/* Display the types */}
+                        <em>Price: {"$".repeat(rec.price_level || 0)}</em><br />
+                        <em>Types: {rec.types.join(", ")}</em> {/* Display the types */} <br />
+                        <span>
+                            Status:{" "}
+                            {rec.open_now ? (
+                                <span style={{ color: "green" }}>Open Now</span>
+                            ) : (
+                                <span style={{ color: "red" }}>Closed</span>
+                            )}
+                        </span>
+                        <emd></emd>
                         <p>
                             Online Rating:{" "}
                             <span style={{ color: "orange", fontWeight: "bold" }}>

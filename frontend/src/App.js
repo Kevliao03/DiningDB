@@ -18,10 +18,7 @@ const App = () => {
                                 <Link className="nav-link" to="/">Home</Link>
                             </li>
                             <li className="nav-item">
-                                <Link className="nav-link" to="/restaurants">Restaurants</Link>
-                            </li>
-                            <li className="nav-item">
-                                <Link className="nav-link" to="/preferences">Preferences</Link>
+                                <Link className="nav-link" to="/manage-preferences">Preferences</Link>
                             </li>
                             <li className="nav-item">
                                 <Link className="nav-link" to="/recommendations">Recommendations</Link>

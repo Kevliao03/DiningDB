@@ -1,30 +1,11 @@
 import React, { useState } from "react";
-import axios from "axios";
 
 const Preferences = ({ userId }) => {
     const [preferences, setPreferences] = useState("");
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
-    const [message, setMessage] = useState("");
 
     const handleUpdate = () => {
-        setLoading(true);
-        setError(null);
-
-        axios
-            .post("http://127.0.0.1:5000/preferences", {
-                user_id: userId,
-                preferences: preferences,
-            })
-            .then((response) => {
-                setMessage(response.data.message);
-                setLoading(false);
-            })
-            .catch((err) => {
-                console.error("Error updating preferences:", err);
-                setError("Failed to update preferences. Please try again.");
-                setLoading(false);
-            });
+        // Call backend API to update preferences
+        console.log(`Updated preferences for user ${userId}: ${preferences}`);
     };
 
     return (
@@ -41,11 +22,9 @@ const Preferences = ({ userId }) => {
                     placeholder="e.g., Italian, Vegan"
                 />
             </div>
-            <button className="btn btn-primary mt-3" onClick={handleUpdate} disabled={loading}>
-                {loading ? "Saving..." : "Save Preferences"}
+            <button className="btn btn-primary mt-3" onClick={handleUpdate}>
+                Save Preferences
             </button>
-            {error && <p className="text-danger mt-3">{error}</p>}
-            {message && <p className="text-success mt-3">{message}</p>}
         </div>
     );
 };
