@@ -15,7 +15,7 @@ def fetch_restaurants_from_google(city, state, store_in_db=True):
     endpoint = "https://maps.googleapis.com/maps/api/place/textsearch/json"
     params = {
         "query": f"restaurants in {location_query}",
-        "key": "", # FILL IN
+        "key": "AIzaSyD6HS-BkpR_vc5YKkjcOMSDoIcn_C1rErA", # FILL IN
     }
     response = requests.get(endpoint, params=params)
     if response.status_code != 200:
