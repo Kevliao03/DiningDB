@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import "./ManagePreferences.css"; 
+
+const BASE_URL = process.env.REACT_APP_API_URL || "http://192.168.5.43:8000";
 
 const ManagePreferences = () => {
     const [userId, setUserId] = useState("");
@@ -7,16 +10,18 @@ const ManagePreferences = () => {
     const [newPreference, setNewPreference] = useState("");
     const navigate = useNavigate();
 
+    // Fetch preferences whenever the user ID changes
     useEffect(() => {
         if (userId) {
             fetchPreferences();
         }
     }, [userId]);
 
+    // Fetch preferences from the backend
     const fetchPreferences = useCallback(async () => {
         if (!userId) return;
         try {
-            const response = await fetch(`http://127.0.0.1:5000/preferences/${userId}`);
+            const response = await fetch(`${BASE_URL}/preferences/${userId}`);
             if (response.ok) {
                 const data = await response.json();
                 setPreferences(data.preferences.split(", ").filter((pref) => pref !== "") || []);
@@ -31,9 +36,10 @@ const ManagePreferences = () => {
         }
     }, [userId]);
 
+    // Create a new user in the backend
     const createUser = async (id) => {
         try {
-            const response = await fetch("http://127.0.0.1:5000/users", {
+            const response = await fetch(`${BASE_URL}/users`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -48,12 +54,13 @@ const ManagePreferences = () => {
         }
     };
 
+    // Add a new preference
     const addPreference = async () => {
         if (newPreference.trim() === "" || !userId) return;
         const updatedPreferences = [...preferences, newPreference];
 
         try {
-            const response = await fetch(`http://127.0.0.1:5000/preferences/${userId}`, {
+            const response = await fetch(`${BASE_URL}/preferences/${userId}`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -70,28 +77,33 @@ const ManagePreferences = () => {
         }
     };
 
+    // Remove a preference
     const removePreference = async (preferenceToRemove) => {
         if (!userId) return;
         const updatedPreferences = preferences.filter((pref) => pref !== preferenceToRemove);
 
         try {
-            await fetch(`http://127.0.0.1:5000/preferences/${userId}`, {
+            const response = await fetch(`${BASE_URL}/preferences/${userId}`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({ preferences: updatedPreferences.join(", ") }),
             });
+            if (!response.ok) {
+                throw new Error("Failed to update preferences");
+            }
             setPreferences(updatedPreferences);
         } catch (error) {
             console.error("Error updating preferences:", error);
         }
     };
 
+    // Clear all preferences
     const clearPreferences = async () => {
         if (!userId) return;
         try {
-            const response = await fetch(`http://127.0.0.1:5000/preferences/${userId}`, {
+            const response = await fetch(`${BASE_URL}/preferences/${userId}`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -108,107 +120,66 @@ const ManagePreferences = () => {
     };
 
     return (
-        <div>
-            <h1>Manage Preferences</h1>
-            <div style={{ marginBottom: "20px" }}>
-                <label htmlFor="userId">Enter User ID:</label>
-                <input
-                    id="userId"
-                    type="text"
-                    value={userId}
-                    onChange={(e) => setUserId(e.target.value)}
-                    style={{ marginLeft: "10px", padding: "5px", borderRadius: "5px" }}
-                />
-            </div>
-            <button
-                onClick={() => navigate("/recommendations")}
-                style={{
-                    backgroundColor: "green",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "5px",
-                    padding: "10px",
-                    marginBottom: "20px",
-                    marginRight: "10px",
-                    cursor: "pointer",
-                }}
-            >
-                Back to Recommendations
-            </button>
-            <button
-                onClick={() => navigate("/rated-restaurants")}
-                style={{
-                    backgroundColor: "blue",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "5px",
-                    padding: "10px",
-                    cursor: "pointer",
-                }}
-            >
-                Go to Rated Restaurants
-            </button>
-            {userId && (
-                <>
-                    <p>Current Preferences:</p>
-                    <ul style={{ listStyleType: "none", paddingLeft: 0 }}>
-                        {preferences.map((pref, index) => (
-                            <li key={index} style={{ marginBottom: "10px" }}>
-                                {pref}
+        <div className="container py-5">
+            <h2 className="text-center mb-4">🔧 Manage Your Preferences</h2>
+            <div className="row justify-content-center">
+                <div className="col-md-6">
+                    <div className="card shadow-sm p-4">
+                        <div className="mb-3">
+                            <label className="form-label">User ID</label>
+                            <input
+                                type="text"
+                                value={userId}
+                                onChange={(e) => setUserId(e.target.value)}
+                                className="form-control"
+                                placeholder="Enter your User ID"
+                            />
+                        </div>
+                        {userId && (
+                            <>
+                                <p className="mt-3">Current Preferences:</p>
+                                <ul className="list-group mb-3">
+                                    {preferences.map((pref, index) => (
+                                        <li
+                                            key={index}
+                                            className="list-group-item d-flex justify-content-between align-items-center"
+                                        >
+                                            {pref}
+                                            <button
+                                                onClick={() => removePreference(pref)}
+                                                className="btn btn-sm btn-danger"
+                                            >
+                                                Remove
+                                            </button>
+                                        </li>
+                                    ))}
+                                </ul>
+                                <div className="input-group mb-3">
+                                    <input
+                                        type="text"
+                                        placeholder="Add new preference"
+                                        value={newPreference}
+                                        onChange={(e) => setNewPreference(e.target.value)}
+                                        className="form-control"
+                                    />
+                                    <button
+                                        onClick={addPreference}
+                                        className="btn btn-primary"
+                                    >
+                                        Add
+                                    </button>
+                                </div>
                                 <button
-                                    onClick={() => removePreference(pref)}
-                                    style={{
-                                        marginLeft: "10px",
-                                        backgroundColor: "red",
-                                        color: "white",
-                                        border: "none",
-                                        borderRadius: "5px",
-                                        padding: "5px 8px",
-                                        fontSize: "12px",
-                                        cursor: "pointer",
-                                    }}
+                                    onClick={clearPreferences}
+                                    className="btn btn-warning w-100"
                                 >
-                                    Remove
+                                    Clear Preferences
                                 </button>
-                            </li>
-                        ))}
-                    </ul>
-                    <input
-                        type="text"
-                        placeholder="Add new preference"
-                        value={newPreference}
-                        onChange={(e) => setNewPreference(e.target.value)}
-                        style={{ marginRight: "10px", padding: "5px", borderRadius: "5px" }}
-                    />
-                    <button
-                        onClick={addPreference}
-                        style={{
-                            backgroundColor: "blue",
-                            color: "white",
-                            border: "none",
-                            borderRadius: "5px",
-                            padding: "10px",
-                            marginRight: "10px",
-                            cursor: "pointer",
-                        }}
-                    >
-                        Add Preference
-                    </button>
-                    <button
-                        onClick={clearPreferences}
-                        style={{
-                            backgroundColor: "red",
-                            color: "white",
-                            border: "none",
-                            borderRadius: "5px",
-                            padding: "10px",
-                            cursor: "pointer",
-                        }}
-                    >
-                        Clear Preferences
-                    </button>
-                </>
-            )}
+                            </>
+                        )}
+                    </div>
+                </div>
+            </div>
         </div>
     );
 };

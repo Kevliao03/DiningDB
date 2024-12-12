@@ -1,0 +1,107 @@
+/* Recommendations.css */
+
+/* Global Styles */
+body {
+    background-color: #f8f9fa; /* Light grey background for the app */
+    font-family: 'Arial', sans-serif;
+    color: #343a40; /* Dark grey text */
+}
+
+/* Card Styles */
+.card {
+    border: none; /* Remove border */
+    border-radius: 10px; /* Rounded corners */
+    transition: transform 0.2s, box-shadow 0.2s; /* Animation for hover effect */
+}
+
+.card:hover {
+    transform: scale(1.03); /* Slight zoom on hover */
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2); /* Subtle shadow */
+}
+
+.card-title {
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: #007bff; /* Bootstrap primary color */
+}
+
+.card-text {
+    font-size: 0.95rem;
+    color: #495057; /* Bootstrap secondary text color */
+}
+
+/* Buttons */
+.btn-primary {
+    background-color: #007bff; /* Primary blue */
+    border: none;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+}
+
+.btn-success {
+    background-color: #28a745; /* Success green */
+    border: none;
+}
+
+.btn-success:hover {
+    background-color: #218838; /* Darker green on hover */
+}
+
+.btn-secondary {
+    background-color: #6c757d; /* Secondary grey */
+    border: none;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268; /* Darker grey on hover */
+}
+
+/* Input Fields */
+.form-control {
+    border-radius: 5px; /* Rounded input fields */
+    border: 1px solid #ced4da; /* Light border */
+    padding: 10px;
+}
+
+.form-control:focus {
+    border-color: #80bdff; /* Blue border on focus */
+    box-shadow: 0px 0px 5px rgba(0, 123, 255, 0.5); /* Subtle shadow */
+}
+
+/* Page Header */
+h2 {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #343a40; /* Dark grey */
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+/* List of Recommendations */
+ul {
+    list-style-type: none; /* Remove bullet points */
+    padding-left: 0;
+}
+
+li {
+    margin-bottom: 20px; /* Spacing between items */
+}
+
+/* Status Indicators */
+.text-success {
+    font-weight: bold;
+}
+
+.text-danger {
+    font-weight: bold;
+}
+
+.text-warning {
+    font-weight: bold;
+}
+
+.text-info {
+    font-weight: bold;
+}

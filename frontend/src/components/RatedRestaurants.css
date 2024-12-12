@@ -1,0 +1,15 @@
+.container {
+    max-width: 1000px;
+    margin: auto;
+}
+.card {
+    border-radius: 10px;
+}
+.card-title {
+    font-size: 1.25rem;
+    color: #333;
+}
+.card-text {
+    font-size: 0.9rem;
+    color: #666;
+}

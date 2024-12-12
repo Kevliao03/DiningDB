@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from "react";
+import "./RatedRestaurants.css"; 
+
+const BASE_URL = process.env.REACT_APP_API_URL || "http://192.168.5.43:8000";
 
 const RatedRestaurants = () => {
     const [userId, setUserId] = useState("");
     const [ratedRestaurants, setRatedRestaurants] = useState([]);
     const [error, setError] = useState(null);
     const [newRating, setNewRating] = useState({});
-    const navigate = useNavigate();
 
     const fetchRatedRestaurants = async () => {
         if (!userId) {
@@ -15,15 +16,13 @@ const RatedRestaurants = () => {
         }
 
         try {
-            const response = await fetch(
-                `http://127.0.0.1:5000/rated-restaurants?user_id=${userId}`
-            );
+            setError(null);
+            const response = await fetch(`${BASE_URL}/rated-restaurants?user_id=${userId}`);
             if (!response.ok) {
                 throw new Error("Failed to fetch rated restaurants");
             }
             const data = await response.json();
             setRatedRestaurants(data);
-            setError(null);
         } catch (err) {
             setError(err.message);
             setRatedRestaurants([]);
@@ -31,8 +30,14 @@ const RatedRestaurants = () => {
     };
 
     const updateRating = async (restaurantId, newRatingValue) => {
+        if (!newRatingValue || isNaN(newRatingValue)) {
+            setError("Please enter a valid rating.");
+            return;
+        }
+
         try {
-            const response = await fetch(`http://127.0.0.1:5000/interactions/add`, {
+            setError(null);
+            const response = await fetch(`${BASE_URL}/interactions/add`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -51,6 +56,7 @@ const RatedRestaurants = () => {
                     r.restaurant_id === restaurantId ? { ...r, rating: newRatingValue } : r
                 )
             );
+            setNewRating((prev) => ({ ...prev, [restaurantId]: "" })); // Clear input after update
         } catch (err) {
             setError(err.message);
         }
@@ -58,19 +64,17 @@ const RatedRestaurants = () => {
 
     const deleteRating = async (restaurantId) => {
         try {
-            const response = await fetch(
-                `http://127.0.0.1:5000/interactions/delete`, // Add this endpoint to your backend
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                        user_id: userId,
-                        restaurant_id: restaurantId,
-                    }),
-                }
-            );
+            setError(null);
+            const response = await fetch(`${BASE_URL}/interactions/delete`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    user_id: userId,
+                    restaurant_id: restaurantId,
+                }),
+            });
             if (!response.ok) {
                 throw new Error("Failed to delete rating");
             }
@@ -83,123 +87,84 @@ const RatedRestaurants = () => {
     };
 
     return (
-        <div>
-            <h2>Rated Restaurants</h2>
-            <div style={{ marginBottom: "20px" }}>
-                <label htmlFor="userId">Enter User ID:</label>
-                <input
-                    id="userId"
-                    type="text"
-                    value={userId}
-                    onChange={(e) => setUserId(e.target.value)}
-                    style={{ marginLeft: "10px", padding: "5px", borderRadius: "5px" }}
-                />
-                <button
-                    onClick={fetchRatedRestaurants}
-                    style={{
-                        marginLeft: "10px",
-                        padding: "5px 10px",
-                        borderRadius: "5px",
-                        backgroundColor: "blue",
-                        color: "white",
-                        border: "none",
-                        cursor: "pointer",
-                    }}
-                >
-                    Fetch Rated Restaurants
-                </button>
-            </div>
-            {error && <p className="text-danger">{error}</p>}
-            {ratedRestaurants.length > 0 ? (
-                <ul style={{ listStyleType: "none", paddingLeft: 0 }}>
-                    {ratedRestaurants.map((restaurant) => (
-                        <li key={restaurant.restaurant_id} style={{ marginBottom: "20px" }}>
-                            <strong>{restaurant.name}</strong> - {restaurant.location} <br />
-                            Your Rating: {restaurant.rating}
-                            <br />
+        <div className="container py-5">
+            <h2 className="text-center mb-4">🍴 Your Rated Restaurants</h2>
+            <div className="row justify-content-center mb-4">
+                <div className="col-md-6">
+                    <div className="card shadow-sm p-4">
+                        <h5 className="text-primary mb-3">Enter Your User ID</h5>
+                        <div className="input-group">
                             <input
-                                type="number"
-                                value={newRating[restaurant.restaurant_id] || ""}
-                                onChange={(e) =>
-                                    setNewRating((prev) => ({
-                                        ...prev,
-                                        [restaurant.restaurant_id]: e.target.value,
-                                    }))
-                                }
-                                style={{
-                                    marginTop: "10px",
-                                    marginRight: "10px",
-                                    padding: "5px",
-                                    borderRadius: "5px",
-                                }}
-                                placeholder="New Rating"
+                                type="text"
+                                id="userId"
+                                value={userId}
+                                onChange={(e) => setUserId(e.target.value)}
+                                className="form-control"
+                                placeholder="Enter User ID"
                             />
                             <button
-                                onClick={() =>
-                                    updateRating(
-                                        restaurant.restaurant_id,
-                                        parseFloat(newRating[restaurant.restaurant_id])
-                                    )
-                                }
-                                style={{
-                                    backgroundColor: "green",
-                                    color: "white",
-                                    border: "none",
-                                    borderRadius: "5px",
-                                    padding: "5px 10px",
-                                    marginRight: "10px",
-                                    cursor: "pointer",
-                                }}
+                                onClick={fetchRatedRestaurants}
+                                className="btn btn-primary"
                             >
-                                Update Rating
+                                Fetch
                             </button>
-                            <button
-                                onClick={() => deleteRating(restaurant.restaurant_id)}
-                                style={{
-                                    backgroundColor: "red",
-                                    color: "white",
-                                    border: "none",
-                                    borderRadius: "5px",
-                                    padding: "5px 10px",
-                                    cursor: "pointer",
-                                }}
-                            >
-                                Delete Rating
-                            </button>
-                        </li>
-                    ))}
-                </ul>
-            ) : (
-                <p>No rated restaurants found for this user.</p>
-            )}
-            <div style={{ marginTop: "20px" }}>
-                <button
-                    onClick={() => navigate("/recommendations")}
-                    style={{
-                        backgroundColor: "blue",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "5px",
-                        padding: "10px",
-                        marginRight: "10px",
-                        cursor: "pointer",
-                    }}
-                >
-                    Back to Recommendations
-                </button>
-                <button
-                    onClick={() => navigate("/manage-preferences")}
-                    style={{
-                        backgroundColor: "blue",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "5px",
-                        padding: "10px",
-                        cursor: "pointer",
-                    }}
-                >
-                    Manage Preferences
-                </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {error && <p className="text-danger text-center">{error}</p>}
+            <div className="row">
+                {ratedRestaurants.length > 0 ? (
+                    ratedRestaurants.map((restaurant) => (
+                        <div className="col-md-6 col-lg-4 mb-4" key={restaurant.restaurant_id}>
+                            <div className="card shadow-sm">
+                                <div className="card-body">
+                                    <h5 className="card-title">{restaurant.name}</h5>
+                                    <p className="card-text">
+                                        <strong>Location:</strong> {restaurant.location} <br />
+                                        <strong>Your Rating:</strong> {restaurant.rating}
+                                    </p>
+                                    <div className="d-flex mb-3">
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            max="5"
+                                            step="1"
+                                            value={newRating[restaurant.restaurant_id] || ""}
+                                            onChange={(e) =>
+                                                setNewRating((prev) => ({
+                                                    ...prev,
+                                                    [restaurant.restaurant_id]: e.target.value,
+                                                }))
+                                            }
+                                            className="form-control me-2"
+                                            placeholder="New Rating"
+                                        />
+                                        <button
+                                            onClick={() =>
+                                                updateRating(
+                                                    restaurant.restaurant_id,
+                                                    parseFloat(newRating[restaurant.restaurant_id])
+                                                )
+                                            }
+                                            className="btn btn-success"
+                                        >
+                                            Update
+                                        </button>
+                                    </div>
+                                    <button
+                                        onClick={() => deleteRating(restaurant.restaurant_id)}
+                                        className="btn btn-danger w-100"
+                                    >
+                                        Delete Rating
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    ))
+                ) : (
+                    <p className="text-center">No rated restaurants found for this user.</p>
+                )}
             </div>
         </div>
     );

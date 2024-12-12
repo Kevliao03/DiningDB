@@ -1,0 +1,5 @@
+pandas
+scikit-surprise
+SQLAlchemy
+psycopg2-binary
+Flask

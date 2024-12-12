@@ -1,0 +1,14 @@
+.container {
+    max-width: 900px;
+    margin: auto;
+}
+.card {
+    border-radius: 10px;
+}
+.list-group-item {
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+}
+.list-group-item button {
+    font-size: 12px;
+}
